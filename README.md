@@ -16,7 +16,7 @@ Deep neural network for industrial predictive maintenance, trained from scratch 
 | RAM usage (activations) | 384 bytes |
 | Inference latency | < 5 ms on Cortex-M4 @ 120 MHz |
 | Parameters / MACC | 3,077 params · 3,264 MACC |
-| Global accuracy | 88% (on-target) |
+| Global accuracy | 88% |
 | Target board | STM32L4R9I-DISCO |
 
 > Deployed and validated on real hardware 
@@ -343,7 +343,7 @@ Réseau de neurones profond pour la maintenance prédictive industrielle, entra�
 | RAM (activations) | 384 octets |
 | Latence d'inférence | < 5 ms sur Cortex-M4 @ 120 MHz |
 | Paramètres / MACC | 3 077 params · 3 264 MACC |
-| Accuracy globale | 88 % (sur cible) |
+| Accuracy globale | 88 % |
 | Carte cible | STM32L4R9I-DISCO |
 
 > Déployé et validé sur matériel réel
