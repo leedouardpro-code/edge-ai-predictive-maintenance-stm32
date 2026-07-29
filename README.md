@@ -542,27 +542,31 @@ Le `.tflite` est ensuite importé dans X-CUBE-AI (via STM32CubeIDE), qui génèr
 ### Architecture du flux de données
 
 ```mermaid
-flowchart LR
-    subgraph PC["PC — Python"]
-        A2["Chargement échantillons<br/>X_test .npy"]
-        B2["Normalisation<br/>StandardScaler"]
-        C2["Envoi 5 floats<br/>(20 octets)"]
-        H2["Comparaison avec<br/>labels attendus"]
-        A2 --> B2 --> C2
-    end
-
-    subgraph MCU["STM32L4R9I-DISCO — Cortex-M4 @ 120 MHz"]
-        D2["UART RX<br/>buffer d'entrée (20 o)"]
-        E2["ai_failure_prediction_run<br/>runtime X-CUBE-AI"]
-        F2["Softmax → 5 classes<br/>float32 → uint8"]
-        G2["UART TX<br/>5 probabilités"]
-        D2 --> E2 --> F2 --> G2
-    end
-
-    C2 -->|"UART · 115200 baud"| D2
-    G2 -->|"UART · 115200 baud"| H2
-
-    PC -.->|"handshake 0xAB / 0xCD"| MCU
+---
+config:
+  theme: redux
+  layout: fixed
+---
+flowchart TB
+ subgraph PC["PC — Python"]
+        A["Load test samples<br>X_test .npy"]
+        B["StandardScaler<br>normalization"]
+        C["Send 5 floats<br>(20 bytes)"]
+        H["Compare with<br>ground truth"]
+  end
+ subgraph s1["STM32L4R91-DISCO - Cortex M4 @ 120MHz"]
+        n1["UART RX<br>input buffer (20 Bytes)"]
+        n2["X-Cube-AI-runtime"]
+        n3["Softmax → 5 classes<br>float32 → uint8"]
+        n4["UART TX<br>5 probabilities"]
+  end
+    A --> B
+    B --> C
+    n1 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> |"UART · 115200 baud"| H
+    C --> |"UART · 115200 baud"| n1
 ```
 
 ### Implémentation embarquée
