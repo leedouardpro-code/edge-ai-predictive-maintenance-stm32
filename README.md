@@ -459,7 +459,7 @@ Après nettoyage, `RNF` disparaît entièrement du dataset : toutes ses occurren
 **Reformulation en multiclasse**
 Le `Y` original est une matrice multi-label (5 colonnes binaires indépendantes). Il est converti en classes mutuellement exclusives via `idxmax` pour identifier la panne active, puis `pd.get_dummies` pour l'encodage one-hot final. Une classe `No Error` est ajoutée explicitement pour les machines saines, indispensable en multiclasse car le modèle doit toujours désigner exactement une classe. Classes finales : `[HDF, No Error, OSF, PWF, TWF]`.
 
-**Split** — division manuelle avec seed fixe (`seed=42`) : 80 % train, 10 % validation, 10 % test.
+**Split** division manuelle avec seed fixe (`seed=42`) : 80 % train, 10 % validation, 10 % test.
 
 **Normalisation** 
 `StandardScaler` fitté sur `X_train` uniquement, puis appliqué à `X_val` et `X_test` pour éviter toute fuite d'information. Après SMOTE, un second scaler est fitté sur `X_train_bal` (les statistiques ayant changé avec les données synthétiques) et appliqué à `X_val` et `X_test`.
@@ -637,4 +637,4 @@ Sur ce MLP de 3 077 paramètres, l'intérêt est surtout pédagogique : le modè
 
 Ce projet a permis de parcourir l'intégralité du cycle de développement d'un modèle d'IA embarquée, de la préparation des données jusqu'à l'inférence sur microcontrôleur. Le principal défi n'a pas été la conception du modèle lui-même, mais son déploiement : configuration correcte de l'UART, protocole de synchronisation PC/STM32, gestion des types de données (float32, endianness) et compatibilité entre le firmware X-CUBE-AI et le code applicatif.
 
-Le résultat final est un système fonctionnel capable de classifier 5 types d'états machine (HDF, No Error, OSF, PWF, TWF) en temps réel sur une STM32, avec une accuracy de 88 % et une empreinte mémoire de seulement 384 octets de RAM — illustrant concrètement le compromis performance/frugalité au cœur de l'IA embarquée.
+Le résultat final est un système fonctionnel capable de classifier 5 types d'états machine (HDF, No Error, OSF, PWF, TWF) en temps réel sur une STM32, avec une accuracy de 88 % et une empreinte mémoire de seulement 384 octets de RAM illustrant concrètement le compromis performance/frugalité au cœur de l'IA embarquée.
