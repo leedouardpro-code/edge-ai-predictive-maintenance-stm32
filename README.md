@@ -129,13 +129,13 @@ After cleaning, `RNF` disappears entirely from the dataset: all its occurrences 
 
 ### Preprocessing
 
-**Multiclass reformulation** — the original `Y` is a multi-label matrix (5 independent binary columns). It is converted to mutually exclusive classes via `idxmax` to identify the active failure, then `pd.get_dummies` for the final one-hot encoding. A `No Error` class is added explicitly for healthy machines, which is required in multiclass since the model must always pick exactly one class. Final classes: `[HDF, No Error, OSF, PWF, TWF]`.
+**Multiclass reformulation** : the original `Y` is a multi-label matrix (5 independent binary columns). It is converted to mutually exclusive classes via `idxmax` to identify the active failure, then `pd.get_dummies` for the final one-hot encoding. A `No Error` class is added explicitly for healthy machines, which is required in multiclass since the model must always pick exactly one class. Final classes: `[HDF, No Error, OSF, PWF, TWF]`.
 
-**Split** — manual three-way split with fixed seed (`seed=42`): 80% train, 10% validation, 10% test.
+**Split** : manual three-way split with fixed seed (`seed=42`): 80% train, 10% validation, 10% test.
 
-**Normalization** — `StandardScaler` fitted on `X_train` only, then applied to `X_val` and `X_test` to avoid data leakage. After SMOTE, a second scaler is fitted on `X_train_bal` (statistics change with synthetic data) and applied to `X_val` and `X_test`.
+**Normalization** : `StandardScaler` fitted on `X_train` only, then applied to `X_val` and `X_test` to avoid data leakage. After SMOTE, a second scaler is fitted on `X_train_bal` (statistics change with synthetic data) and applied to `X_val` and `X_test`.
 
-**Rebalancing** — SMOTE (`sampling_strategy="auto"`) is used to bring all minority classes up to the majority class. SMOTE alone (without undersampling) was chosen because real failure data is scarce: reducing the majority class would worsen the information deficit. Data is shuffled after SMOTE, which orders samples by class.
+**Rebalancing** : SMOTE (`sampling_strategy="auto"`) is used to bring all minority classes up to the majority class. SMOTE alone (without undersampling) was chosen because real failure data is scarce: reducing the majority class would worsen the information deficit. Data is shuffled after SMOTE, which orders samples by class.
 
 ### Model architecture
 
@@ -148,10 +148,10 @@ Dense(16, relu) → Dropout(0.5)
 Dense(5, softmax)
 ```
 
-- `softmax` output — consistent with the multiclass problem (a single active class)
+- `softmax` output: consistent with the multiclass problem (a single active class)
 - Loss: `categorical_crossentropy`
 - Optimizer: `Adam` (default learning rate)
-- Batch size: 32 — Epochs: 20
+- Batch size: 32; Epochs: 20
 
 ### Performance
 
@@ -159,11 +159,13 @@ Dense(5, softmax)
 
 <img src="images/Matrix_unbal.png" alt="Matrix_unbal" width="600"/>
 
-**Without rebalancing** — the model predicts `No Error` in 100% of cases. Global accuracy reaches ~97% simply because that class represents ~97% of the dataset, but recall is zero on every failure class. The model learns no failure pattern at all.
+**Without rebalancing**
+The model predicts `No Error` in 100% of cases. Global accuracy reaches ~97% simply because that class represents ~97% of the dataset, but recall is zero on every failure class. The model learns no failure pattern at all.
 
 <img src="images/Matrix_bal.png" alt="Matrix_bal" width="600"/>
 
-**With SMOTE rebalancing** — the model starts detecting failures:
+**With SMOTE rebalancing** 
+The model starts detecting failures:
 
 | Class | Accuracy |
 |---|---|
@@ -183,8 +185,8 @@ Disparities persist despite rebalancing: SMOTE generates synthetic samples that 
 
 STM32L4R9I-DISCO, based on the STM32L4R9AI microcontroller (Cortex-M4, 120 MHz):
 
-- **Flash:** 2 MB — far more than needed for the model weights (12 KB)
-- **RAM:** 640 KB — model activations use only 384 bytes
+- **Flash:** 2 MB far more than needed for the model weights (12 KB)
+- **RAM:** 640 KB model activations use only 384 bytes
 - **FPU:** accelerates the model's float32 computations
 - **USART1 (PB6/PB7):** PC communication via ST-LINK Virtual COM Port
 
@@ -210,37 +212,41 @@ The `.tflite` file is then imported into X-CUBE-AI (via STM32CubeIDE), which gen
 ### Data flow architecture
 
 ```mermaid
-flowchart LR
-    subgraph PC["PC — Python"]
-        A["Load test samples<br/>X_test .npy"]
-        B["StandardScaler<br/>normalization"]
-        C["Send 5 floats<br/>(20 bytes)"]
-        H["Compare with<br/>ground truth"]
-        A --> B --> C
-    end
-
-    subgraph MCU["STM32L4R9I-DISCO — Cortex-M4 @ 120 MHz"]
-        D["UART RX<br/>input buffer (20 B)"]
-        E["ai_failure_prediction_run<br/>X-CUBE-AI runtime"]
-        F["Softmax → 5 classes<br/>float32 → uint8"]
-        G["UART TX<br/>5 probabilities"]
-        D --> E --> F --> G
-    end
-
-    C -->|"UART · 115200 baud"| D
-    G -->|"UART · 115200 baud"| H
-
-    PC -.->|"handshake 0xAB / 0xCD"| MCU
+---
+config:
+  theme: redux
+  layout: fixed
+---
+flowchart TB
+ subgraph PC["PC — Python"]
+        A["Load test samples<br>X_test .npy"]
+        B["StandardScaler<br>normalization"]
+        C["Send 5 floats<br>(20 bytes)"]
+        H["Compare with<br>ground truth"]
+  end
+ subgraph s1["STM32L4R91-DISCO - Cortex M4 @ 120MHz"]
+        n1["UART RX<br>input buffer (20 Bytes)"]
+        n2["X-Cube-AI-runtime"]
+        n3["Softmax → 5 classes<br>float32 → uint8"]
+        n4["UART TX<br>5 probabilities"]
+  end
+    A --> B
+    B --> C
+    n1 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> |"UART · 115200 baud"| H
+    C --> |"UART · 115200 baud"| n1
 ```
 
 ### Embedded implementation
 
 `app_x-cube-ai.c` orchestrates inference on the board:
 
-1. **UART sync** — the board waits for byte `0xAB` from the PC, then replies `0xCD` to establish communication.
-2. **Data reception** (`acquire_and_process_data`) — 20 bytes received over UART (5 floats × 4 bytes), copied into the model input buffer.
-3. **Inference** (`ai_run`) — model execution via `ai_failure_prediction_run`.
-4. **Result transmission** (`post_process`) — the 5 output probabilities (float32) are converted to uint8 (×255) and sent back over UART.
+1. **UART sync**: the board waits for byte `0xAB` from the PC, then replies `0xCD` to establish communication.
+2. **Data reception** (`acquire_and_process_data`) : 20 bytes received over UART (5 floats × 4 bytes), copied into the model input buffer.
+3. **Inference** (`ai_run`) : model execution via `ai_failure_prediction_run`.
+4. **Result transmission** (`post_process`) : the 5 output probabilities (float32) are converted to uint8 (×255) and sent back over UART.
 
 PC ↔ STM32 communication runs over USART1 at 115200 baud, on the ST-LINK virtual COM port.
 
@@ -288,16 +294,22 @@ On this 3,077-parameter MLP the benefit is mainly pedagogical : the model alread
 
 ### Models and data
 
-- **Improve TWF detection** — recall stays very low (~0.02) due to the scarcity of real samples. More targeted data augmentation or ADASYN oversampling could help.
-- **Test other architectures** — 1D CNN or LSTM if temporal data is available, to capture progressive degradation patterns.
-- **Adaptive thresholding** — instead of a plain `argmax`, apply per-class confidence thresholds to better handle residual imbalance.
+- **Improve TWF detection**
+  Recall stays very low (~0.02) due to the scarcity of real samples. More targeted data augmentation or ADASYN oversampling could help.
+- **Test other architectures**
+   1D CNN or LSTM if temporal data is available, to capture progressive degradation patterns.
+- **Adaptive thresholding** instead of a plain `argmax`, apply per-class confidence thresholds to better handle residual imbalance.
 
 ### Embedded and system
 
-- **On-device normalization** — data is currently normalized on the PC before transmission. Embedding the `StandardScaler` on the STM32 would allow use with real sensors without external preprocessing.
-- **Real sensor acquisition** — connect actual sensors (temperature, torque, speed) to the board for an end-to-end demo without a PC in the loop.
-- **Result display** — use the OLED screen or LEDs of the STM32L4R9I-DISCO to show the predicted class in real time, without a serial terminal.
-- **Power profiling** — profile and optimize consumption during inference, exploiting the STM32L4 low-power modes between inferences.
+- **On-device normalization**
+  data is currently normalized on the PC before transmission. Embedding the `StandardScaler` on the STM32 would allow use with real sensors without external preprocessing.
+- **Real sensor acquisition**
+  connect actual sensors (temperature, torque, speed) to the board for an end-to-end demo without a PC in the loop.
+- **Result display**
+  use the OLED screen or LEDs of the STM32L4R9I-DISCO to show the predicted class in real time, without a serial terminal.
+- **Power profiling**
+  profile and optimize consumption during inference, exploiting the STM32L4 low-power modes between inferences.
 
 ---
 
@@ -305,11 +317,10 @@ On this 3,077-parameter MLP the benefit is mainly pedagogical : the model alread
 
 This project covers the entire development cycle of an embedded AI model, from data preparation to on-device inference. The main challenge was not designing the model itself, but deploying it: correct UART configuration, PC/STM32 synchronization protocol, data type handling (float32, endianness) and compatibility between the X-CUBE-AI firmware and the application code.
 
-The result is a working system that classifies 5 machine states (HDF, No Error, OSF, PWF, TWF) in real time on an STM32, with 88% accuracy and a memory footprint of only 384 bytes of RAM — a concrete illustration of the performance/frugality trade-off at the heart of embedded AI.
+The result is a working system that classifies 5 machine states (HDF, No Error, OSF, PWF, TWF) in real time on an STM32, with 88% accuracy and a memory footprint of only 384 bytes of RAM, a concrete illustration of the performance/frugality trade-off at the heart of embedded AI.
 
 <br>
 
----
 ---
 
 <br>
@@ -445,13 +456,16 @@ Après nettoyage, `RNF` disparaît entièrement du dataset : toutes ses occurren
 
 ### Prétraitement
 
-**Reformulation en multiclasse** — le `Y` original est une matrice multi-label (5 colonnes binaires indépendantes). Il est converti en classes mutuellement exclusives via `idxmax` pour identifier la panne active, puis `pd.get_dummies` pour l'encodage one-hot final. Une classe `No Error` est ajoutée explicitement pour les machines saines, indispensable en multiclasse car le modèle doit toujours désigner exactement une classe. Classes finales : `[HDF, No Error, OSF, PWF, TWF]`.
+**Reformulation en multiclasse**
+Le `Y` original est une matrice multi-label (5 colonnes binaires indépendantes). Il est converti en classes mutuellement exclusives via `idxmax` pour identifier la panne active, puis `pd.get_dummies` pour l'encodage one-hot final. Une classe `No Error` est ajoutée explicitement pour les machines saines, indispensable en multiclasse car le modèle doit toujours désigner exactement une classe. Classes finales : `[HDF, No Error, OSF, PWF, TWF]`.
 
 **Split** — division manuelle avec seed fixe (`seed=42`) : 80 % train, 10 % validation, 10 % test.
 
-**Normalisation** — `StandardScaler` fitté sur `X_train` uniquement, puis appliqué à `X_val` et `X_test` pour éviter toute fuite d'information. Après SMOTE, un second scaler est fitté sur `X_train_bal` (les statistiques ayant changé avec les données synthétiques) et appliqué à `X_val` et `X_test`.
+**Normalisation** 
+`StandardScaler` fitté sur `X_train` uniquement, puis appliqué à `X_val` et `X_test` pour éviter toute fuite d'information. Après SMOTE, un second scaler est fitté sur `X_train_bal` (les statistiques ayant changé avec les données synthétiques) et appliqué à `X_val` et `X_test`.
 
-**Rééquilibrage** — SMOTE (`sampling_strategy="auto"`) pour monter les classes minoritaires au niveau de la classe majoritaire. SMOTE seul (sans undersampling) est motivé par la rareté des données réelles de pannes : réduire la classe majoritaire aggraverait le manque d'information. Les données sont mélangées après SMOTE, qui ordonne les exemples par classe.
+**Rééquilibrage** 
+SMOTE (`sampling_strategy="auto"`) pour monter les classes minoritaires au niveau de la classe majoritaire. SMOTE seul (sans undersampling) est motivé par la rareté des données réelles de pannes : réduire la classe majoritaire aggraverait le manque d'information. Les données sont mélangées après SMOTE, qui ordonne les exemples par classe.
 
 ### Architecture du modèle
 
@@ -475,11 +489,13 @@ Dense(5, softmax)
 
 <img src="images/Matrix_unbal.png" alt="Matrix_unbal" width="600"/>
 
-**Sans rééquilibrage** — le modèle prédit systématiquement `No Error` dans 100 % des cas. L'accuracy globale atteint ~97 % uniquement parce que cette classe représente ~97 % du dataset, mais le recall est nul sur toutes les classes de pannes. Le modèle n'apprend aucun pattern de défaillance.
+**Sans rééquilibrage** 
+Le modèle prédit systématiquement `No Error` dans 100 % des cas. L'accuracy globale atteint ~97 % uniquement parce que cette classe représente ~97 % du dataset, mais le recall est nul sur toutes les classes de pannes. Le modèle n'apprend aucun pattern de défaillance.
 
 <img src="images/Matrix_bal.png" alt="Matrix_bal" width="600"/>
 
-**Avec rééquilibrage (SMOTE)** — le modèle commence à détecter les pannes :
+**Avec rééquilibrage (SMOTE)** 
+Le modèle commence à détecter les pannes :
 
 | Classe | Accuracy |
 |---|---|
@@ -499,8 +515,8 @@ Les disparités persistent malgré l'équilibrage : SMOTE génère des exemples 
 
 STM32L4R9I-DISCO, basée sur le microcontrôleur STM32L4R9AI (Cortex-M4, 120 MHz) :
 
-- **Flash :** 2 MB — largement suffisant pour les poids du modèle (12 KB)
-- **RAM :** 640 KB — les activations n'occupent que 384 octets
+- **Flash :** 2 MB largement suffisant pour les poids du modèle (12 KB)
+- **RAM :** 640 KB les activations n'occupent que 384 octets
 - **FPU :** accélère les calculs float32 du modèle
 - **USART1 (PB6/PB7) :** communication avec le PC via ST-LINK Virtual COM Port
 
@@ -553,10 +569,10 @@ flowchart LR
 
 `app_x-cube-ai.c` orchestre l'inférence sur la carte :
 
-1. **Synchronisation UART** — la carte attend un octet `0xAB` du PC, puis répond `0xCD` pour établir la communication.
-2. **Réception des données** (`acquire_and_process_data`) — 20 octets reçus via UART (5 floats × 4 octets), copiés dans le buffer d'entrée du modèle.
-3. **Inférence** (`ai_run`) — exécution via `ai_failure_prediction_run`.
-4. **Envoi des résultats** (`post_process`) — les 5 probabilités de sortie (float32) sont converties en uint8 (×255) et transmises via UART.
+1. **Synchronisation UART** : la carte attend un octet `0xAB` du PC, puis répond `0xCD` pour établir la communication.
+2. **Réception des données** (`acquire_and_process_data`) : 20 octets reçus via UART (5 floats × 4 octets), copiés dans le buffer d'entrée du modèle.
+3. **Inférence** (`ai_run`) : exécution via `ai_failure_prediction_run`.
+4. **Envoi des résultats** (`post_process`) : les 5 probabilités de sortie (float32) sont converties en uint8 (×255) et transmises via UART.
 
 La communication PC ↔ STM32 s'effectue via USART1 à 115200 baud, sur le port COM virtuel ST-LINK.
 
@@ -604,16 +620,16 @@ Sur ce MLP de 3 077 paramètres, l'intérêt est surtout pédagogique : le modè
 
 ### Modèles et données
 
-- **Améliorer la détection de TWF** — le recall reste très faible (~0,02) faute d'exemples réels. Une data augmentation plus ciblée ou un sur-échantillonnage ADASYN pourraient aider.
-- **Tester d'autres architectures** — CNN 1D ou LSTM si des données temporelles sont disponibles, pour capturer des patterns de dégradation progressive.
-- **Seuillage adaptatif** — plutôt qu'un simple `argmax`, appliquer des seuils de confiance par classe pour mieux gérer le déséquilibre résiduel.
+- **Améliorer la détection de TWF** : le recall reste très faible (~0,02) faute d'exemples réels. Une data augmentation plus ciblée ou un sur-échantillonnage ADASYN pourraient aider.
+- **Tester d'autres architectures** : CNN 1D ou LSTM si des données temporelles sont disponibles, pour capturer des patterns de dégradation progressive.
+- **Seuillage adaptatif** : plutôt qu'un simple `argmax`, appliquer des seuils de confiance par classe pour mieux gérer le déséquilibre résiduel.
 
 ### Embarqué et système
 
-- **Normalisation embarquée** — les données sont actuellement normalisées côté PC avant envoi. Intégrer le `StandardScaler` sur la STM32 permettrait une utilisation avec de vrais capteurs sans preprocessing externe.
-- **Acquisition capteurs réelle** — connecter de vrais capteurs (température, couple, vitesse) pour une démonstration end-to-end sans PC intermédiaire.
-- **Interface de résultat** — exploiter l'écran OLED ou les LEDs de la STM32L4R9I-DISCO pour afficher la classe prédite en temps réel, sans terminal série.
-- **Consommation énergétique** — profiler et optimiser la consommation pendant l'inférence, en exploitant les modes basse consommation du STM32L4 entre deux inférences.
+- **Normalisation embarquée** : les données sont actuellement normalisées côté PC avant envoi. Intégrer le `StandardScaler` sur la STM32 permettrait une utilisation avec de vrais capteurs sans preprocessing externe.
+- **Acquisition capteurs réelle** : connecter de vrais capteurs (température, couple, vitesse) pour une démonstration end-to-end sans PC intermédiaire.
+- **Interface de résultat** : exploiter l'écran OLED ou les LEDs de la STM32L4R9I-DISCO pour afficher la classe prédite en temps réel, sans terminal série.
+- **Consommation énergétique** : profiler et optimiser la consommation pendant l'inférence, en exploitant les modes basse consommation du STM32L4 entre deux inférences.
 
 ---
 
