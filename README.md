@@ -16,7 +16,7 @@ Deep neural network for industrial predictive maintenance, trained from scratch 
 | RAM usage (activations) | 384 bytes |
 | Inference latency | < 5 ms on Cortex-M4 @ 120 MHz |
 | Parameters / MACC | 3,077 params · 3,264 MACC |
-| Global accuracy | ~88% (on-target) |
+| Global accuracy | 88% (on-target) |
 | Target board | STM32L4R9I-DISCO |
 
 > Deployed and validated on real hardware 
@@ -205,8 +205,8 @@ The `.tflite` file is then imported into X-CUBE-AI (via STM32CubeIDE), which gen
 
 | Resource | Model only | With X-CUBE-AI runtime | Board capacity |
 |---|---|---|---|
-| Flash (read-only) | 12.3 KB | ~22.9 KB (22,938 B) | 2 MB (>98% free) |
-| RAM (read-write) | 384 B | ~2.8 KB (2,868 B) | 640 KB (>99% free) |
+| Flash (read-only) | 12.3 KB | 22.9 KB | 2 MB (>98% free) |
+| RAM (read-write) | 384 B | 2.8 KB | 640 KB (>99% free) |
 | Operations (MACC) | 3,264 | 3,264 | FPU-accelerated |
 
 ### Data flow architecture
@@ -268,7 +268,7 @@ The on-desktop validation compares predictions from the original TFLite model (r
 
 | Metric | Desktop (Python) | Embedded (STM32) |
 |---|---|---|
-| Global accuracy | ~87% | ~88% |
+| Global accuracy | 87% | 88% |
 | Flash footprint | 12 KB (`.tflite`) | 12.3 KB |
 | Inference latency | < 1 ms | < 5 ms |
 | Memory used | — | 384 B RAM |
@@ -287,8 +287,8 @@ The current model runs in float32 (FPU-accelerated on the Cortex-M4). Post-train
 
 | | Float32 (current) | INT8 (estimated) |
 |---|---|---|
-| Flash (weights) | 12.3 KB | ~3 KB |
-| Accuracy | ~88% | to be measured (typically 1–3 pts drop) |
+| Flash (weights) | 12.3 KB | 3 KB |
+| Accuracy | 88% | to be measured (typically 1–3 pts drop) |
 
 On this 3,077-parameter MLP the benefit is mainly pedagogical : the model already fits the target with a wide margin. The gain becomes decisive on heavier models or on microcontrollers without an FPU.
 
@@ -343,7 +343,7 @@ Réseau de neurones profond pour la maintenance prédictive industrielle, entra�
 | RAM (activations) | 384 octets |
 | Latence d'inférence | < 5 ms sur Cortex-M4 @ 120 MHz |
 | Paramètres / MACC | 3 077 params · 3 264 MACC |
-| Accuracy globale | ~88 % (sur cible) |
+| Accuracy globale | 88 % (sur cible) |
 | Carte cible | STM32L4R9I-DISCO |
 
 > Déployé et validé sur matériel réel
@@ -535,8 +535,8 @@ Le `.tflite` est ensuite importé dans X-CUBE-AI (via STM32CubeIDE), qui génèr
 
 | Ressource | Modèle seul | Avec runtime X-CUBE-AI | Capacité carte |
 |---|---|---|---|
-| Flash (read-only) | 12,3 KB | ~22,9 KB (22 938 o) | 2 MB (>98 % libre) |
-| RAM (read-write) | 384 o | ~2,8 KB (2 868 o) | 640 KB (>99 % libre) |
+| Flash (read-only) | 12,3 KB | 22,9 KB | 2 MB (>98 % libre) |
+| RAM (read-write) | 384 o | 2,8 KB | 640 KB (>99 % libre) |
 | Opérations (MACC) | 3 264 | 3 264 | Accéléré par FPU |
 
 ### Architecture du flux de données
@@ -598,7 +598,7 @@ La validation on-desktop compare les prédictions du modèle TFLite original (ex
 
 | Métrique | Desktop (Python) | Embarqué (STM32) |
 |---|---|---|
-| Accuracy globale | ~87 % | ~88 % |
+| Accuracy globale | 87 % | 88 % |
 | Empreinte Flash | 12 KB (`.tflite`) | 12,3 KB |
 | Latence d'inférence | < 1 ms | < 5 ms |
 | Mémoire utilisée | — | 384 o RAM |
@@ -617,8 +617,8 @@ Le modèle actuel tourne en float32 (accéléré par le FPU du Cortex-M4). Une q
 
 | | Float32 (actuel) | INT8 (estimé) |
 |---|---|---|
-| Flash (poids) | 12,3 KB | ~3 KB |
-| Accuracy | ~88 % | à mesurer (dégradation typique 1–3 pts) |
+| Flash (poids) | 12,3 KB | 3 KB |
+| Accuracy | 88 % | à mesurer (dégradation typique 1–3 pts) |
 
 Sur ce MLP de 3 077 paramètres, l'intérêt est surtout pédagogique : le modèle tient déjà largement dans la cible. Le gain devient décisif sur des modèles plus lourds ou des microcontrôleurs sans FPU.
 
