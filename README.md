@@ -287,8 +287,8 @@ The current model runs in float32 (FPU-accelerated on the Cortex-M4). Post-train
 
 | | Float32 (current) | INT8 (estimated) |
 |---|---|---|
-| Flash (weights) | 12.3 KB | 3 KB |
-| Accuracy | 88% | to be measured (typically 1–3 pts drop) |
+| Flash (weights) | 12.3 KB | ~3 KB |
+| Accuracy | 88% | to be measured |
 
 On this 3,077-parameter MLP the benefit is mainly pedagogical : the model already fits the target with a wide margin. The gain becomes decisive on heavier models or on microcontrollers without an FPU.
 
@@ -617,8 +617,8 @@ Le modèle actuel tourne en float32 (accéléré par le FPU du Cortex-M4). Une q
 
 | | Float32 (actuel) | INT8 (estimé) |
 |---|---|---|
-| Flash (poids) | 12,3 KB | 3 KB |
-| Accuracy | 88 % | à mesurer (dégradation typique 1–3 pts) |
+| Flash (poids) | 12,3 KB | ~3 KB |
+| Accuracy | 88 % | à mesurer |
 
 Sur ce MLP de 3 077 paramètres, l'intérêt est surtout pédagogique : le modèle tient déjà largement dans la cible. Le gain devient décisif sur des modèles plus lourds ou des microcontrôleurs sans FPU.
 
